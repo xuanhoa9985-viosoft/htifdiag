@@ -9,6 +9,8 @@
 #define HTIF_DEV_SHIFT      (56)
 #define HTIF_CMD_SHIFT      (48)
 
+extern void printstr(const char *);
+
 #define HTIF_CMD_READ       (0x00UL)
 #define HTIF_CMD_WRITE      (0x01UL)
 #define HTIF_CMD_IDENTITY   (0xFFUL)
@@ -30,13 +32,11 @@ static inline unsigned long htif_fromhost(void)
 	return data;
 }
 
-extern void printstr(const char *);
-
 int main(int argc, char **argv)
 {
 	printstr("htifdiag\n");
 
-	htif_tohost(1, HTIF_CMD_WRITE, 'F');
+	htif_tohost(0, 0, 0);
 
 	return 0;
 }

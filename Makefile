@@ -22,3 +22,15 @@ clean:
 
 %.o: common/%.S
 	$(CROSS)$(CC) $(CFLAGS) -o $@ -c $<
+
+# Rebuilding other components of lowrisc-chip
+
+.PHONY: rebuild-fesvr
+
+rebuild-fesvr:
+	$(MAKE) -C $(TOP)/riscv-tools/riscv-fesvr/build install
+
+.PHONY: run-diag
+
+run-diag: diag
+	$(TOP)/emulator/emulator-DefaultCPPConfig diag
