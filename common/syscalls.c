@@ -66,6 +66,21 @@ static void tohost_exit(int code)
   while (1);
 }
 
+#define HTIF_DEV_SHIFT      (56)
+#define HTIF_CMD_SHIFT      (48)
+#define HTIF_CMD_READ       (0x00UL)
+#define HTIF_CMD_WRITE      (0x01UL)
+#define HTIF_CMD_IDENTITY   (0xFFUL)
+#define HTIF_NR_DEV         (256UL)
+
+static inline void htif_tohost(unsigned long dev,
+			       unsigned long cmd, unsigned long data)
+{
+	unsigned long packet;
+	packet = (dev << HTIF_DEV_SHIFT) | (cmd << HTIF_CMD_SHIFT) | data;
+	while (swap_csr(tohost, packet) != 0);
+}
+
 long handle_trap(long cause, long epc, long regs[32])
 {
   int* csr_insn;
@@ -75,9 +90,16 @@ long handle_trap(long cause, long epc, long regs[32])
   if (cause == CAUSE_ILLEGAL_INSTRUCTION &&
       (*(int*)epc & *csr_insn) == *csr_insn)
     ;
-  else if (cause != CAUSE_SYSCALL)
-    tohost_exit(1337);
-  else if (regs[17] == SYS_exit)
+  else if (cause != CAUSE_SYSCALL) {
+    if (cause == CAUSE_PRIVILEGED_INSTRUCTION) {
+      htif_tohost(1, HTIF_CMD_WRITE, 't');
+      htif_tohost(1, HTIF_CMD_WRITE, 'e');
+      htif_tohost(1, HTIF_CMD_WRITE, 's');
+      htif_tohost(1, HTIF_CMD_WRITE, 't');
+      htif_tohost(1, HTIF_CMD_WRITE, '\n');
+    } else
+      tohost_exit(1337);
+  } else if (regs[17] == SYS_exit)
     tohost_exit(regs[10]);
   else if (regs[17] == SYS_stats)
     sys_ret = handle_stats(regs[10]);

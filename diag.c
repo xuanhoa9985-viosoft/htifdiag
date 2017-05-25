@@ -36,7 +36,6 @@ int main(int argc, char **argv)
 {
 	printstr("htifdiag\n");
 
-	htif_tohost(0, 0, 0);
-
+	swap_csr(tohost, 0);//trigger to handle_trap()
 	return 0;
 }
